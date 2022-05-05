@@ -1,12 +1,18 @@
 package com.cst438.controllers;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.expression.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -139,7 +145,7 @@ public class GradeBookController {
 		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
 		checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.
 		
-		// for each grade in gradebook, update the assignment grade in database 
+		// for each grade in grade book, update the assignment grade in database 
 		System.out.printf("%d %s %d\n",  gradebook.assignmentId, gradebook.assignmentName, gradebook.grades.size());
 		
 		for (GradebookDTO.Grade g : gradebook.grades) {
@@ -155,6 +161,46 @@ public class GradeBookController {
 		}
 		
 	}
+	
+    //  As an instructor for a course , I can add a new assignment for my course.  The assignment has a name and a due date.
+    @PostMapping("/course/{course_id}/assignment")
+    @Transactional
+    public Boolean createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int course_id) throws ParseException {
+        System.out.println(course_id);
+        System.out.println("Create assignment for gradebook " + assignment.assignmentName + " " + assignment.dueDate);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Date date = formatter.parse(assignment.dueDate);
+        Course course = courseRepository.findByCourse_id(course_id);
+
+        Assignment newAssignment = new Assignment(course, assignment.assignmentName, date, 1);
+
+        assignmentRepository.save(newAssignment);
+        return true;
+    }
+
+    // As an instructor, I can change the name of the assignment for my course
+    @PutMapping("/course/{course_id}/assignment/{id}")
+    @Transactional
+    public AssignmentListDTO.AssignmentDTO updateAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int id, @PathVariable String course_id) {
+        Assignment currentAssignment = assignmentRepository.findById(id);
+        currentAssignment.setName(assignment.assignmentName);
+        return new AssignmentListDTO.AssignmentDTO(currentAssignment.getId(), currentAssignment.getCourse().getCourse_id(), currentAssignment.getName(), currentAssignment.getDueDate().toString(), currentAssignment.getCourse().getTitle());
+    }
+
+    // As an instructor, I can delete an assignment  for my course (only if there are no grades for the assignment).
+    @DeleteMapping("/course/{course_id}/assignment/{id}")
+    @Transactional
+    public Boolean deleteAssignment(@PathVariable int id, @PathVariable String course_id) {
+        Assignment currentAssignment = assignmentRepository.findById(id);
+        if (currentAssignment.getAssignmentGrades().size() == 0) {
+            assignmentRepository.delete(currentAssignment);
+            return true;
+        }
+        return false;
+    }
 	
 	private Assignment checkAssignment(int assignmentId, String email) {
 		// get assignment 

@@ -1,6 +1,7 @@
 package com.cst438.domain;
 
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -64,6 +65,11 @@ public class Assignment {
 	public String toString() {
 		return "Assignment [id=" + id + ", course_id=" + course.getCourse_id() + ", name=" + name + ", dueDate=" + dueDate
 				+ ", needsGrading=" + needsGrading + "]";
+	}
+	
+	// added function for REST API
+	public ArrayList<AssignmentGrade> getAssignmentGrades() {
+		return new ArrayList<>(this.assignmentGrades);
 	}
 	
 }
