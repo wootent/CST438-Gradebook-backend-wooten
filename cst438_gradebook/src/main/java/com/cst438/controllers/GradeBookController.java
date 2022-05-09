@@ -162,39 +162,50 @@ public class GradeBookController {
 		
 	}
 	
-    //  As an instructor for a course , I can add a new assignment for my course.  The assignment has a name and a due date.
-    @PostMapping("/course/{course_id}/assignment")
+    // As an instructor for a course , I can add a new assignment for my course. The assignment has a name and a due date.
+	@PostMapping("/course/{course_id}/assignment")
     @Transactional
-    public Boolean createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int course_id) throws ParseException {
-        System.out.println(course_id);
-        System.out.println("Create assignment for gradebook " + assignment.assignmentName + " " + assignment.dueDate);
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
-        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-        Date date = formatter.parse(assignment.dueDate);
+    public Boolean createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int course_id) throws ParseException, java.text.ParseException {
+        
+        // format time need development with time & date
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = dateFormatter.parse(assignment.dueDate);
+       
+        // find course by ID
         Course course = courseRepository.findByCourse_id(course_id);
 
+        // create new assignment
         Assignment newAssignment = new Assignment(course, assignment.assignmentName, date, 1);
 
         assignmentRepository.save(newAssignment);
         return true;
     }
 
+
     // As an instructor, I can change the name of the assignment for my course
     @PutMapping("/course/{course_id}/assignment/{id}")
     @Transactional
     public AssignmentListDTO.AssignmentDTO updateAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int id, @PathVariable String course_id) {
-        Assignment currentAssignment = assignmentRepository.findById(id);
+        
+    	// find assignment by ID
+    	Assignment currentAssignment = assignmentRepository.findById(id);
+    	
+    	// update name of current assignment
         currentAssignment.setName(assignment.assignmentName);
+        
+        // write to database
         return new AssignmentListDTO.AssignmentDTO(currentAssignment.getId(), currentAssignment.getCourse().getCourse_id(), currentAssignment.getName(), currentAssignment.getDueDate().toString(), currentAssignment.getCourse().getTitle());
     }
 
-    // As an instructor, I can delete an assignment  for my course (only if there are no grades for the assignment).
+    // As an instructor, I can delete an assignment for my course (only if there are no grades for the assignment).
     @DeleteMapping("/course/{course_id}/assignment/{id}")
     @Transactional
     public Boolean deleteAssignment(@PathVariable int id, @PathVariable String course_id) {
-        Assignment currentAssignment = assignmentRepository.findById(id);
+        
+    	// find assignment by ID
+    	Assignment currentAssignment = assignmentRepository.findById(id);
+    	
+    	// delete if grades are null
         if (currentAssignment.getAssignmentGrades().size() == 0) {
             assignmentRepository.delete(currentAssignment);
             return true;
@@ -204,7 +215,7 @@ public class GradeBookController {
 	
 	private Assignment checkAssignment(int assignmentId, String email) {
 		// get assignment 
-		Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
+		Assignment assignment = assignmentRepository.findById(assignmentId);
 		if (assignment == null) {
 			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment not found. "+assignmentId );
 		}
