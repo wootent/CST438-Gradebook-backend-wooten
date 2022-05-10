@@ -1,12 +1,18 @@
 package com.cst438.controllers;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.expression.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -139,7 +145,7 @@ public class GradeBookController {
 		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
 		checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.
 		
-		// for each grade in gradebook, update the assignment grade in database 
+		// for each grade in grade book, update the assignment grade in database 
 		System.out.printf("%d %s %d\n",  gradebook.assignmentId, gradebook.assignmentName, gradebook.grades.size());
 		
 		for (GradebookDTO.Grade g : gradebook.grades) {
@@ -156,11 +162,71 @@ public class GradeBookController {
 		
 	}
 	
+    // As an instructor for a course , I can add a new assignment for my course. The assignment has a name and a due date.
+	@PostMapping("/course/{course_id}/assignment")
+    @Transactional
+    public Boolean createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int course_id) throws ParseException, java.text.ParseException {
+        
+        // format time need development with time & date
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = dateFormatter.parse(assignment.dueDate);
+       
+        // find course by ID
+        Course course = courseRepository.findById(course_id).orElse(null);
+
+        if (course != null) {
+        	// create new assignment
+            Assignment newAssignment = new Assignment(course, assignment.assignmentName, date, 1);
+            assignmentRepository.save(newAssignment);
+            return true;
+        } else {
+        	throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Course with given ID does not exist.");
+        }
+    }
+
+    // As an instructor, I can change the name of the assignment for my course
+    @PutMapping("/course/{course_id}/assignment/{id}")
+    @Transactional
+    public Boolean updateAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int id, @PathVariable String course_id) {
+        
+    	// find assignment by ID
+    	Assignment currentAssignment = assignmentRepository.findById(id).orElse(null);
+    	
+    	if(currentAssignment != null) {
+        	// update name of current assignment
+            currentAssignment.setName(assignment.assignmentName);
+            return true;
+    	} else {
+    		throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment with given ID does not exist.");
+    	}
+    }
+
+    // As an instructor, I can delete an assignment for my course (only if there are no grades for the assignment).
+    @DeleteMapping("/course/{course_id}/assignment/{id}")
+    @Transactional
+    public Boolean deleteAssignment(@PathVariable int id, @PathVariable String course_id) {
+        
+    	// find assignment by ID
+    	Assignment currentAssignment = assignmentRepository.findById(id).orElse(null);
+    	
+    	if (currentAssignment != null) {
+        	// delete if grades are null
+            if (currentAssignment.getAssignmentGrades().size() == 0) {
+                assignmentRepository.delete(currentAssignment);
+                return true;
+            } else {
+            	return false;
+            }
+    	} else {
+    		throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment with given ID does not exist.");
+    	}   	
+    }
+	
 	private Assignment checkAssignment(int assignmentId, String email) {
 		// get assignment 
 		Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
 		if (assignment == null) {
-			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment not found. "+assignmentId );
+			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment not found. "+ assignmentId );
 		}
 		// check that user is the course instructor
 		if (!assignment.getCourse().getInstructor().equals(email)) {

@@ -1,6 +1,8 @@
 package com.cst438.domain;
 
-import java.sql.Date;
+
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -28,6 +30,16 @@ public class Assignment {
 	private String name;
 	private Date dueDate;
 	private int needsGrading;  // 0 = false,  1= true (past due date and not all students have grades)
+	
+	// default constructor
+	public Assignment() {};
+	// added for REST API
+	public Assignment(Course course, String name, Date dueDate, int needsGrading) {
+		this.course = course;
+		this.name = name;
+		this.dueDate = dueDate;
+		this.needsGrading = needsGrading;
+	}
 	
 	public int getId() {
 		return id;
@@ -64,6 +76,16 @@ public class Assignment {
 	public String toString() {
 		return "Assignment [id=" + id + ", course_id=" + course.getCourse_id() + ", name=" + name + ", dueDate=" + dueDate
 				+ ", needsGrading=" + needsGrading + "]";
+	}
+	
+	// added function for REST API
+	public ArrayList<AssignmentGrade> getAssignmentGrades() {
+		return new ArrayList<>(this.assignmentGrades);
+	}
+	
+	// added function for Junit-testing
+	public void setAssignmentGrades(List<AssignmentGrade> gradesList) {
+		this.assignmentGrades = gradesList;
 	}
 	
 }

@@ -55,7 +55,6 @@ public class Course {
 		this.semester = semester;
 	}
 	
-	
 	public List<Enrollment> getEnrollments() {
 		return enrollments;
 	}
