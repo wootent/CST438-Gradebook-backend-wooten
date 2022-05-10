@@ -172,29 +172,33 @@ public class GradeBookController {
         Date date = dateFormatter.parse(assignment.dueDate);
        
         // find course by ID
-        Course course = courseRepository.findByCourse_id(course_id);
+        Course course = courseRepository.findById(course_id).orElse(null);
 
-        // create new assignment
-        Assignment newAssignment = new Assignment(course, assignment.assignmentName, date, 1);
-
-        assignmentRepository.save(newAssignment);
-        return true;
+        if (course != null) {
+        	// create new assignment
+            Assignment newAssignment = new Assignment(course, assignment.assignmentName, date, 1);
+            assignmentRepository.save(newAssignment);
+            return true;
+        } else {
+        	throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Course with given ID does not exist.");
+        }
     }
-
 
     // As an instructor, I can change the name of the assignment for my course
     @PutMapping("/course/{course_id}/assignment/{id}")
     @Transactional
-    public AssignmentListDTO.AssignmentDTO updateAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int id, @PathVariable String course_id) {
+    public Boolean updateAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int id, @PathVariable String course_id) {
         
     	// find assignment by ID
-    	Assignment currentAssignment = assignmentRepository.findById(id);
+    	Assignment currentAssignment = assignmentRepository.findById(id).orElse(null);
     	
-    	// update name of current assignment
-        currentAssignment.setName(assignment.assignmentName);
-        
-        // write to database
-        return new AssignmentListDTO.AssignmentDTO(currentAssignment.getId(), currentAssignment.getCourse().getCourse_id(), currentAssignment.getName(), currentAssignment.getDueDate().toString(), currentAssignment.getCourse().getTitle());
+    	if(currentAssignment != null) {
+        	// update name of current assignment
+            currentAssignment.setName(assignment.assignmentName);
+            return true;
+    	} else {
+    		throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment with given ID does not exist.");
+    	}
     }
 
     // As an instructor, I can delete an assignment for my course (only if there are no grades for the assignment).
@@ -203,21 +207,26 @@ public class GradeBookController {
     public Boolean deleteAssignment(@PathVariable int id, @PathVariable String course_id) {
         
     	// find assignment by ID
-    	Assignment currentAssignment = assignmentRepository.findById(id);
+    	Assignment currentAssignment = assignmentRepository.findById(id).orElse(null);
     	
-    	// delete if grades are null
-        if (currentAssignment.getAssignmentGrades().size() == 0) {
-            assignmentRepository.delete(currentAssignment);
-            return true;
-        }
-        return false;
+    	if (currentAssignment != null) {
+        	// delete if grades are null
+            if (currentAssignment.getAssignmentGrades().size() == 0) {
+                assignmentRepository.delete(currentAssignment);
+                return true;
+            } else {
+            	return false;
+            }
+    	} else {
+    		throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment with given ID does not exist.");
+    	}   	
     }
 	
 	private Assignment checkAssignment(int assignmentId, String email) {
 		// get assignment 
-		Assignment assignment = assignmentRepository.findById(assignmentId);
+		Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
 		if (assignment == null) {
-			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment not found. "+assignmentId );
+			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment not found. "+ assignmentId );
 		}
 		// check that user is the course instructor
 		if (!assignment.getCourse().getInstructor().equals(email)) {
