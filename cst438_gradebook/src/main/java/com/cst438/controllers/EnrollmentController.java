@@ -24,7 +24,7 @@ public class EnrollmentController {
 	EnrollmentRepository enrollmentRepository;
 
 	/*
-	 * endpoint used by registration service to add an enrollment to an existing
+	 * end point used by registration service to add an enrollment to an existing
 	 * course.
 	 */
 	@PostMapping("/enrollment")
@@ -32,8 +32,15 @@ public class EnrollmentController {
 	public EnrollmentDTO addEnrollment(@RequestBody EnrollmentDTO enrollmentDTO) {
 		
 		//TODO  complete this method in homework 4
+		Enrollment enroll = new Enrollment();
 		
-		return null;
+		enroll.setStudentName(enrollmentDTO.studentName);
+		enroll.setStudentEmail(enrollmentDTO.studentEmail);
+		enroll.setCourse(courseRepository.findById(enrollmentDTO.course_id).orElse(null));
+		
+		enrollmentRepository.save(enroll);
+		
+		return enrollmentDTO;
 		
 	}
 

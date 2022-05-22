@@ -60,7 +60,6 @@ public class Enrollment {
 		this.course = course;
 	}
 	
-
 	public List<AssignmentGrade> getAssignmentGrades() {
 		return assignmentGrades;
 	}
