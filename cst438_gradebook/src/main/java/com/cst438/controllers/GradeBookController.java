@@ -1,12 +1,10 @@
 package com.cst438.controllers;
 
+import java.io.Console;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.expression.ParseException;
 import org.springframework.http.HttpStatus;
@@ -101,12 +99,12 @@ public class GradeBookController {
 		System.out.println("Gradebook - calcFinalGrades for course " + course_id);
 		
 		// check that this request is from the course instructor 
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+		// String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
 		
 		Course c = courseRepository.findById(course_id).orElse(null);
-		if (!c.getInstructor().equals(email)) {
-			throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
-		}
+		// if (!c.getInstructor().equals(email)) {
+		//	throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
+		// }
 		
 		CourseDTOG cdto = new CourseDTOG();
 		cdto.course_id = course_id;
