@@ -60,7 +60,7 @@ public class GradeBookController {
 		}
 		return result;
 	}
-	
+
 	@GetMapping("/gradebook/{id}")
 	public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId  ) {
 		
@@ -150,7 +150,7 @@ public class GradeBookController {
 			System.out.printf("%s\n", g.toString());
 			AssignmentGrade ag = assignmentGradeRepository.findById(g.assignmentGradeId).orElse(null);
 			if (ag == null) {
-				throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Invalid grade primary key. "+g.assignmentGradeId);
+				throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Invalid grade primary key. "+ g.assignmentGradeId);
 			}
 			ag.setScore(g.grade);
 			System.out.printf("%s\n", ag.toString());
