@@ -163,7 +163,7 @@ public class EndToEndTestSubmitGrades {
 			/*
 			 *  Locate submit button and click
 			 */
-			driver.findElement(By.xpath("//button[@id='Submit']")).click();
+			driver.findElement(By.xpath("//button[@id='submit']")).click();
 			Thread.sleep(SLEEP_DURATION);
 
 			/*
